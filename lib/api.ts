@@ -42,7 +42,6 @@ export async function getAllCountries(): Promise<Country[]> {
     const url = `${API_URL}/all?fields=${LIST_FIELDS}`;
     return await safeFetch(url);
   } catch (error) {
-    console.error("Error fetching countries:", error);
     throw error;
   }
 }
@@ -53,7 +52,6 @@ export async function getCountryByCode(code: string): Promise<Country> {
     const data = await safeFetch(url);
     return Array.isArray(data) ? data[0] : data;
   } catch (error) {
-    console.error(`Error fetching country ${code}:`, error);
     throw error;
   }
 }
@@ -63,7 +61,6 @@ export async function getCountriesByRegion(region: string): Promise<Country[]> {
     const url = `${API_URL}/region/${encodeURIComponent(region)}?fields=${LIST_FIELDS}`;
     return await safeFetch(url);
   } catch (error) {
-    console.error(`Error fetching countries for region ${region}:`, error);
     throw error;
   }
 }
@@ -73,7 +70,6 @@ export async function searchCountries(query: string): Promise<Country[]> {
     const url = `${API_URL}/name/${encodeURIComponent(query)}?fields=${LIST_FIELDS}`;
     return await safeFetch(url);
   } catch (error) {
-    console.error(`Error searching countries with query "${query}":`, error);
     return [];
   }
 }

@@ -8,7 +8,7 @@ export default function RegionFilter({
   regions,
 }: RegionFilterProps) {
   return (
-    <div className="mb-6">
+    <div>
       <select
         value={selectedRegion}
         onChange={(e) => onRegionChange(e.target.value)}

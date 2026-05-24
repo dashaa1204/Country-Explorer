@@ -1,0 +1,198 @@
+import { TravelRoute } from "@/types/travel";
+
+/**
+ * Hand-picked 2-3 itinerary ideas for selected countries (ISO cca2).
+ * Countries not listed here will use generated routes.
+ */
+export const CURATED_ROUTES: Record<string, TravelRoute[]> = {
+  MN: [
+    {
+      id: "mn-ub-culture",
+      title: "Ulaanbaatar Culture & History",
+      duration: "3-4 days",
+      summary:
+        "A city-focused trip covering top museums, monasteries, and nearby nature.",
+      stops: [
+        "Sukhbaatar Square",
+        "Gandan Monastery",
+        "Chinggis Khaan Museum",
+        "Zaisan Hill",
+        "Terelj National Park",
+      ],
+      bestFor: "First-time visitors",
+      pace: "balanced",
+    },
+    {
+      id: "mn-gobi-expedition",
+      title: "Gobi Desert Expedition",
+      duration: "7-9 days",
+      summary:
+        "An overland route through dunes, canyons, and classic nomadic landscapes.",
+      stops: [
+        "Ulaanbaatar",
+        "Baga Gazriin Chuluu",
+        "Yol Valley",
+        "Khongor Sand Dunes",
+        "Bayanzag Flaming Cliffs",
+      ],
+      bestFor: "Adventure travelers",
+      pace: "active",
+    },
+    {
+      id: "mn-khuvsgul",
+      title: "Khuvsgul Lake & North",
+      duration: "8-10 days",
+      summary:
+        "A scenic route to Mongolia's northern forests and crystal-clear lake region.",
+      stops: ["Ulaanbaatar", "Murun", "Khatgal", "Khuvsgul Lake", "Taiga area"],
+      bestFor: "Nature lovers",
+      pace: "relax",
+    },
+  ],
+  JP: [
+    {
+      id: "jp-golden-route",
+      title: "Tokyo, Kyoto, Osaka",
+      duration: "7-10 days",
+      summary:
+        "The classic Japan route combining modern cities, temples, and food scenes.",
+      stops: ["Tokyo", "Mt. Fuji area", "Kyoto", "Nara", "Osaka"],
+      bestFor: "First-time Japan travelers",
+      pace: "balanced",
+    },
+    {
+      id: "jp-alps-onsen",
+      title: "Japanese Alps & Onsen",
+      duration: "6-8 days",
+      summary: "Mountain towns, hot springs, and traditional architecture.",
+      stops: ["Nagano", "Matsumoto", "Takayama", "Kanazawa"],
+      bestFor: "Scenic and slower travel",
+      pace: "relax",
+    },
+    {
+      id: "jp-okinawa",
+      title: "Okinawa Islands",
+      duration: "5-7 days",
+      summary: "Beach-focused route with island culture and marine activities.",
+      stops: ["Naha", "Okinawa Churaumi area", "Ishigaki"],
+      bestFor: "Beach holidays",
+      pace: "relax",
+    },
+  ],
+  FR: [
+    {
+      id: "fr-paris",
+      title: "Paris & Classics",
+      duration: "4-5 days",
+      summary: "A compact city itinerary around landmarks, museums, and neighborhoods.",
+      stops: ["Eiffel Tower", "Louvre", "Montmartre", "Versailles (day trip)"],
+      bestFor: "City breaks",
+      pace: "balanced",
+    },
+    {
+      id: "fr-provence-riviera",
+      title: "Provence & French Riviera",
+      duration: "7-9 days",
+      summary: "A south-of-France route with coastal towns and countryside charm.",
+      stops: ["Marseille", "Avignon", "Nice", "Cannes", "Antibes"],
+      bestFor: "Summer travel",
+      pace: "relax",
+    },
+    {
+      id: "fr-loire",
+      title: "Loire Valley Chateaux",
+      duration: "5-6 days",
+      summary: "Castle route through one of France's most historic regions.",
+      stops: ["Blois", "Chambord", "Amboise", "Chenonceau"],
+      bestFor: "History and architecture",
+      pace: "balanced",
+    },
+  ],
+  IT: [
+    {
+      id: "it-classic-trio",
+      title: "Rome, Florence, Venice",
+      duration: "8-10 days",
+      summary: "Italy's classic cultural triangle with art, history, and food.",
+      stops: ["Rome", "Vatican City", "Florence", "Pisa", "Venice"],
+      bestFor: "First-time Italy trips",
+      pace: "balanced",
+    },
+    {
+      id: "it-amalfi",
+      title: "Naples & Amalfi Coast",
+      duration: "5-7 days",
+      summary: "Coastal views, small towns, and Mediterranean cuisine.",
+      stops: ["Naples", "Pompeii", "Sorrento", "Positano", "Capri"],
+      bestFor: "Scenic coastal travel",
+      pace: "relax",
+    },
+    {
+      id: "it-lakes",
+      title: "Northern Lakes",
+      duration: "6-8 days",
+      summary: "A peaceful route through Lombardy's lake districts and alpine views.",
+      stops: ["Milan", "Lake Como", "Bellagio", "Verona"],
+      bestFor: "Relaxed scenic travel",
+      pace: "relax",
+    },
+  ],
+  TH: [
+    {
+      id: "th-bangkok",
+      title: "Bangkok Essentials",
+      duration: "3-4 days",
+      summary: "Temples, local markets, and food spots in and around Bangkok.",
+      stops: ["Grand Palace", "Wat Arun", "Chatuchak Market", "Chao Phraya River"],
+      bestFor: "Short city trip",
+      pace: "balanced",
+    },
+    {
+      id: "th-islands",
+      title: "Phuket & Krabi Islands",
+      duration: "7-9 days",
+      summary: "Beach and island route with snorkeling and boat day trips.",
+      stops: ["Phuket", "Phi Phi Islands", "Krabi", "Railay Beach"],
+      bestFor: "Beach and island holidays",
+      pace: "relax",
+    },
+    {
+      id: "th-north",
+      title: "Chiang Mai & Northern Thailand",
+      duration: "6-8 days",
+      summary: "A balanced route through temples, hills, and local culture.",
+      stops: ["Chiang Mai", "Doi Suthep", "Pai", "Chiang Rai"],
+      bestFor: "Culture + nature mix",
+      pace: "balanced",
+    },
+  ],
+  US: [
+    {
+      id: "us-nyc",
+      title: "New York City",
+      duration: "4-5 days",
+      summary: "A compact route through iconic neighborhoods and landmarks.",
+      stops: ["Times Square", "Central Park", "Statue of Liberty", "Brooklyn"],
+      bestFor: "Urban travelers",
+      pace: "active",
+    },
+    {
+      id: "us-west-coast",
+      title: "West Coast Highlights",
+      duration: "10-14 days",
+      summary: "Road-trip style itinerary through cities and national parks.",
+      stops: ["San Francisco", "Yosemite", "Los Angeles", "Las Vegas"],
+      bestFor: "Long road trips",
+      pace: "active",
+    },
+    {
+      id: "us-hawaii",
+      title: "Hawaii Islands",
+      duration: "7-9 days",
+      summary: "A beach-forward route with volcanoes, coasts, and island drives.",
+      stops: ["Oahu", "Maui", "Big Island"],
+      bestFor: "Relaxed island travel",
+      pace: "relax",
+    },
+  ],
+};

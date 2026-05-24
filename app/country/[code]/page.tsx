@@ -1,25 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { getCountryByCode } from "@/lib/api";
+import { getAllCountries, getCountryByCode, buildCountryNameMap } from "@/lib/api";
 import { Country } from "@/types/country";
+import FavoriteButton from "@/components/FavoriteButton";
+import BorderLinks from "@/components/BorderLinks";
+import {
+  formatPopulation,
+  googleMapsUrl,
+  populationDensity,
+  wikipediaUrl,
+} from "@/lib/format";
+import { getCountryInterestingFact } from "@/lib/countryFact";
+import { getTravelRoutes } from "@/lib/travelRoutes";
+import { getTravelDescription } from "@/lib/travelDescription";
+import InterestingFact from "@/components/InterestingFact";
+import TravelRoutes from "@/components/TravelRoutes";
+import TravelDescription from "@/components/TravelDescription";
+
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="py-3 border-b border-gray-100 last:border-0">
+      <dt className="text-sm font-medium text-gray-500">{label}</dt>
+      <dd className="mt-1 text-gray-800">{children}</dd>
+    </div>
+  );
+}
 
 export default function CountryDetail() {
   const params = useParams();
   const code = params.code as string;
   const [country, setCountry] = useState<Country | null>(null);
+  const [allCountries, setAllCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [interestingFact, setInterestingFact] = useState<string | null>(null);
+  const [factLoading, setFactLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCountry = async () => {
+    if (!code) return;
+
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await getCountryByCode(code);
-        setCountry(data);
+        const [detail, all] = await Promise.all([
+          getCountryByCode(code),
+          getAllCountries(),
+        ]);
+        setCountry(detail);
+        setAllCountries(all);
+        setError(null);
       } catch (err) {
         setError("Failed to load country details");
         console.error(err);
@@ -28,27 +62,78 @@ export default function CountryDetail() {
       }
     };
 
-    if (code) {
-      fetchCountry();
-    }
+    fetchData();
   }, [code]);
+
+  useEffect(() => {
+    if (!country || allCountries.length === 0) return;
+
+    let cancelled = false;
+    setFactLoading(true);
+    setInterestingFact(null);
+
+    getCountryInterestingFact(country, allCountries)
+      .then((fact) => {
+        if (!cancelled) setInterestingFact(fact);
+      })
+      .finally(() => {
+        if (!cancelled) setFactLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [country, allCountries]);
+
+  const nameMap = useMemo(
+    () => buildCountryNameMap(allCountries),
+    [allCountries],
+  );
+
+  const travelRoutes = useMemo(() => {
+    if (!country) return [];
+    return getTravelRoutes(country, nameMap);
+  }, [country, nameMap]);
+
+  const travelDescription = useMemo(() => {
+    if (!country) return "";
+    return getTravelDescription(country);
+  }, [country]);
+
+  const mapsLink = country
+    ? country.maps?.googleMaps ??
+      googleMapsUrl(country.latlng, country.name.common)
+    : null;
+
+  const density = country
+    ? populationDensity(country.population, country.area)
+    : null;
+
+  const copyCode = async () => {
+    if (!country) return;
+    await navigator.clipboard.writeText(country.cca2);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-500">Loading...</div>
+      <div className="flex items-center justify-center py-24">
+        <div className="text-lg text-gray-500 animate-pulse">
+          Loading country…
+        </div>
       </div>
     );
   }
 
   if (error || !country) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center py-24">
         <div className="text-xl text-red-500 mb-4">
           {error || "Country not found"}
         </div>
         <Link href="/" className="text-blue-600 hover:underline">
-          ← Back to Countries
+          ← Back to all countries
         </Link>
       </div>
     );
@@ -60,126 +145,148 @@ export default function CountryDetail() {
         href="/"
         className="text-blue-600 hover:underline mb-6 inline-block"
       >
-        ← Back to Countries
+        ← Back to all countries
       </Link>
 
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Flag */}
-          <div>
-            <div className="relative w-full h-64">
-              <Image
-                src={country.flags.svg}
-                alt={`Flag of ${country.name.common}`}
-                fill
-                className="object-cover rounded-lg"
-              />
-            </div>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            {country.name.common}
+          </h1>
+          <p className="text-gray-600 mt-1">{country.name.official}</p>
+        </div>
+        <FavoriteButton code={country.cca2} />
+      </div>
+
+      <TravelDescription
+        description={travelDescription}
+        countryName={country.name.common}
+      />
+
+      <TravelRoutes routes={travelRoutes} countryName={country.name.common} />
+
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          <div className="relative aspect-[3/2] w-full self-start bg-gray-100 p-6 lg:p-8">
+            <Image
+              src={country.flags.svg || country.flags.png}
+              alt={country.flags.alt || `Flag of ${country.name.common}`}
+              fill
+              className="object-contain object-center"
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
           </div>
 
-          {/* Details */}
-          <div>
-            <h1 className="text-4xl font-bold mb-2">{country.name.common}</h1>
-            <p className="text-gray-600 text-lg mb-6">
-              {country.name.official}
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  General Information
-                </h3>
-                <ul className="mt-2 space-y-2 text-gray-700">
-                  <li>
-                    <span className="font-medium">Code:</span> {country.cca2} /{" "}
-                    {country.cca3}
-                  </li>
-                  <li>
-                    <span className="font-medium">Region:</span>{" "}
-                    {country.region}
-                  </li>
-                  {country.subregion && (
-                    <li>
-                      <span className="font-medium">Subregion:</span>{" "}
-                      {country.subregion}
-                    </li>
-                  )}
-                  <li>
-                    <span className="font-medium">Population:</span>{" "}
-                    {country.population.toLocaleString()}
-                  </li>
-                  {country.area && (
-                    <li>
-                      <span className="font-medium">Area:</span>{" "}
-                      {country.area.toLocaleString()} km²
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {country.capital && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Capital
-                  </h3>
-                  <p className="mt-2 text-gray-700">
-                    {country.capital.join(", ")}
-                  </p>
-                </div>
+          <div className="p-8">
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button
+                type="button"
+                onClick={copyCode}
+                className="px-3 py-1.5 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                {copied ? "Copied!" : `Copy code (${country.cca2})`}
+              </button>
+              {mapsLink && (
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Open in Maps
+                </a>
               )}
+              <a
+                href={wikipediaUrl(country.name.common)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700"
+              >
+                Wikipedia
+              </a>
+            </div>
 
+            <InterestingFact
+              fact={interestingFact}
+              loading={factLoading}
+              countryName={country.name.common}
+            />
+
+            <dl className="divide-y divide-gray-100 mt-6">
+              <InfoRow label="Codes">
+                {country.cca2} / {country.cca3}
+              </InfoRow>
+              <InfoRow label="Region">
+                {country.region}
+                {country.subregion && ` · ${country.subregion}`}
+                {country.continents?.length
+                  ? ` (${country.continents.join(", ")})`
+                  : ""}
+              </InfoRow>
+              {country.capital && (
+                <InfoRow label="Capital(s)">
+                  {country.capital.join(", ")}
+                </InfoRow>
+              )}
+              <InfoRow label="Population">
+                {country.population.toLocaleString()}
+                <span className="text-gray-500 ml-2">
+                  (~{formatPopulation(country.population)})
+                </span>
+              </InfoRow>
+              {country.area && (
+                <InfoRow label="Area">
+                  {country.area.toLocaleString()} km²
+                  {density && (
+                    <span className="block text-sm text-gray-500 mt-1">
+                      {density}
+                    </span>
+                  )}
+                </InfoRow>
+              )}
               {country.languages &&
                 Object.keys(country.languages).length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Languages
-                    </h3>
-                    <p className="mt-2 text-gray-700">
-                      {Object.values(country.languages).join(", ")}
-                    </p>
-                  </div>
+                  <InfoRow label="Languages">
+                    {Object.values(country.languages).join(", ")}
+                  </InfoRow>
                 )}
-
               {country.currencies &&
                 Object.keys(country.currencies).length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Currencies
-                    </h3>
-                    <ul className="mt-2 space-y-1 text-gray-700">
+                  <InfoRow label="Currencies">
+                    <ul className="space-y-1">
                       {Object.entries(country.currencies).map(
-                        ([code, currency]) => (
-                          <li key={code}>
-                            {currency.symbol} {currency.name} ({code})
+                        ([currCode, currency]) => (
+                          <li key={currCode}>
+                            {currency.symbol} {currency.name} ({currCode})
                           </li>
                         ),
                       )}
                     </ul>
-                  </div>
+                  </InfoRow>
                 )}
-
               {country.timezones && country.timezones.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Timezones
-                  </h3>
-                  <p className="mt-2 text-gray-700">
-                    {country.timezones.join(", ")}
-                  </p>
-                </div>
+                <InfoRow label="Timezones">
+                  {country.timezones.join(", ")}
+                </InfoRow>
               )}
-
+              <InfoRow label="Status">
+                {[
+                  country.unMember && "UN member",
+                  country.landlocked && "Landlocked",
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "—"}
+              </InfoRow>
               {country.borders && country.borders.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Borders
-                  </h3>
-                  <p className="mt-2 text-gray-700">
-                    {country.borders.join(", ")}
-                  </p>
-                </div>
+                <InfoRow label="Bordering countries">
+                  <BorderLinks
+                    borderCodes={country.borders}
+                    nameMap={nameMap}
+                  />
+                </InfoRow>
               )}
-            </div>
+            </dl>
           </div>
         </div>
       </div>

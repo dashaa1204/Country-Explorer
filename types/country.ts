@@ -33,7 +33,16 @@ export interface Country {
   latlng?: [number, number];
   timezones?: string[];
   borders?: string[];
+  continents?: string[];
+  landlocked?: boolean;
+  unMember?: boolean;
+  maps?: {
+    googleMaps?: string;
+    openStreetMaps?: string;
+  };
 }
+
+export type SortOption = "name" | "population-desc" | "population-asc" | "area-desc";
 
 export interface CountryCardProps {
   country: Country;

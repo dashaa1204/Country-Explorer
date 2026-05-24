@@ -8,7 +8,7 @@ export default function SearchBar({
   placeholder = "Search countries...",
 }: SearchBarProps) {
   return (
-    <div className="mb-6">
+    <div>
       <input
         type="text"
         value={searchQuery}

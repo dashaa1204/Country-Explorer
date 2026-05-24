@@ -8,23 +8,43 @@ const LIST_FIELDS = [
   "cca2",
   "cca3",
   "region",
+  "subregion",
   "population",
+  "area",
   "capital",
   "flags",
 ].join(",");
 
-const DETAIL_FIELDS = [
-  "name",
-  "cca2",
-  "cca3",
-  "region",
-  "subregion",
-  "population",
-  "capital",
-  "flags",
-  "languages",
-  "currencies",
-].join(",");
+export function buildCountryNameMap(
+  countries: Country[],
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const c of countries) {
+    map.set(c.cca3, c.name.common);
+    map.set(c.cca2, c.name.common);
+  }
+  return map;
+}
+
+export function sortCountries(
+  countries: Country[],
+  sortBy: import("@/types/country").SortOption,
+): Country[] {
+  const sorted = [...countries];
+  switch (sortBy) {
+    case "population-desc":
+      return sorted.sort((a, b) => b.population - a.population);
+    case "population-asc":
+      return sorted.sort((a, b) => a.population - b.population);
+    case "area-desc":
+      return sorted.sort((a, b) => (b.area ?? 0) - (a.area ?? 0));
+    case "name":
+    default:
+      return sorted.sort((a, b) =>
+        a.name.common.localeCompare(b.name.common),
+      );
+  }
+}
 
 async function safeFetch(url: string) {
   const response = await fetch(url);
@@ -48,7 +68,7 @@ export async function getAllCountries(): Promise<Country[]> {
 
 export async function getCountryByCode(code: string): Promise<Country> {
   try {
-    const url = `${API_URL}/alpha/${encodeURIComponent(code)}?fields=${DETAIL_FIELDS}`;
+    const url = `${API_URL}/alpha/${encodeURIComponent(code)}`;
     const data = await safeFetch(url);
     return Array.isArray(data) ? data[0] : data;
   } catch (error) {

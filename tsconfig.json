@@ -35,9 +35,7 @@
       ]
     },
     "types": [
-      "node",
-      "jest",
-      "@testing-library/jest-dom"
+      "node"
     ],
     "allowJs": true,
     "incremental": true,

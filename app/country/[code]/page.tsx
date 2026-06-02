@@ -44,29 +44,49 @@ export default function CountryDetail() {
   useEffect(() => {
     if (!code) return;
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [detail, all] = await Promise.all([
-          getCountryByCode(code),
-          getAllCountries(),
-        ]);
+    let cancelled = false;
+
+    setLoading(true);
+    setError(null);
+    setCountry(null);
+    setAllCountries([]);
+
+    getCountryByCode(code)
+      .then((detail) => {
+        if (cancelled) return;
         setCountry(detail);
-        setAllCountries(all);
         setError(null);
-      } catch (err) {
+      })
+      .catch((err) => {
+        if (cancelled) return;
         setError("Failed to load country details");
         console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    fetchData();
+    getAllCountries()
+      .then((all) => {
+        if (!cancelled) setAllCountries(all);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAllCountries([]);
+        console.error("Failed to load country enrichment data:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [code]);
 
   useEffect(() => {
-    if (!country || allCountries.length === 0) return;
+    if (!country) {
+      setInterestingFact(null);
+      setFactLoading(false);
+      return;
+    }
 
     let cancelled = false;
     setFactLoading(true);
@@ -75,6 +95,11 @@ export default function CountryDetail() {
     getCountryInterestingFact(country, allCountries)
       .then((fact) => {
         if (!cancelled) setInterestingFact(fact);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setInterestingFact(null);
+        console.error("Failed to load interesting fact:", err);
       })
       .finally(() => {
         if (!cancelled) setFactLoading(false);

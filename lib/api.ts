@@ -55,6 +55,18 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isCountry(value: unknown): value is Country {
+  return (
+    isObject(value) &&
+    isObject(value.name) &&
+    typeof value.cca2 === "string" &&
+    typeof value.cca3 === "string" &&
+    typeof value.region === "string" &&
+    typeof value.population === "number" &&
+    isObject(value.flags)
+  );
+}
+
 function apiErrorMessage(data: unknown): string | null {
   if (!isObject(data) || data.success !== false) {
     return null;
@@ -95,16 +107,11 @@ function assertCountryList(data: unknown, url: string): Country[] {
 
 function assertCountry(data: unknown, url: string): Country {
   const country = Array.isArray(data) ? data[0] : data;
-  if (
-    !isObject(country) ||
-    !isObject(country.name) ||
-    typeof country.cca2 !== "string" ||
-    typeof country.cca3 !== "string"
-  ) {
+  if (!isCountry(country)) {
     throwInvalidResponse(url, data, "country detail");
   }
 
-  return country as Country;
+  return country;
 }
 
 async function safeFetch(url: string): Promise<unknown> {

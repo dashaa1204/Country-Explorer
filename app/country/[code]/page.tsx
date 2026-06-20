@@ -44,26 +44,53 @@ export default function CountryDetail() {
   useEffect(() => {
     if (!code) return;
 
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [detail, all] = await Promise.all([
-          getCountryByCode(code),
-          getAllCountries(),
-        ]);
+        setError(null);
+        setCountry(null);
+        setAllCountries([]);
+
+        const detail = await getCountryByCode(code);
+        if (cancelled) return;
+
         setCountry(detail);
-        setAllCountries(all);
         setError(null);
       } catch (err) {
+        if (cancelled) return;
         setError("Failed to load country details");
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [code]);
+
+  useEffect(() => {
+    if (!country) return;
+
+    let cancelled = false;
+
+    getAllCountries()
+      .then((all) => {
+        if (!cancelled) setAllCountries(all);
+      })
+      .catch((err) => {
+        console.error("Failed to load supplemental country data:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [country]);
 
   useEffect(() => {
     if (!country || allCountries.length === 0) return;

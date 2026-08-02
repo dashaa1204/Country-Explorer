@@ -44,6 +44,8 @@ export default function CountryDetail() {
   useEffect(() => {
     if (!code) return;
 
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -51,18 +53,23 @@ export default function CountryDetail() {
           getCountryByCode(code),
           getAllCountries(),
         ]);
+        if (cancelled) return;
         setCountry(detail);
         setAllCountries(all);
         setError(null);
       } catch (err) {
+        if (cancelled) return;
         setError("Failed to load country details");
         console.error(err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [code]);
 
   useEffect(() => {
